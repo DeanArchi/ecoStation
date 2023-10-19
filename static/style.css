@@ -1,5 +1,5 @@
 body {
-    margin: 0;
+    padding: 8px;
 }
 
 .container {
@@ -25,11 +25,17 @@ body {
     justify-content: flex-start;
     align-items: center;
     padding: 10px;
+    margin: -8px -8px 8px -8px;
 }
 
 .app-name {
     color: black;
     margin-right: 16px;
+    text-decoration: none !important;
+}
+
+.app-name:hover {
+    color: black;
 }
 
 .dropdown-button:hover, .dropdown-button:focus {
