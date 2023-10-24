@@ -1,8 +1,10 @@
+from django.contrib.auth.decorators import login_required
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.shortcuts import render
 from django.db import connection
 
 
+@login_required
 def select_table(request):
     tables = ['MQTT_Server', 'Measured_Unit', 'Station',
               'Favorite', 'Optimal_Value', 'Measurement', 'MQTT_Unit']
@@ -11,10 +13,20 @@ def select_table(request):
         with connection.cursor() as cursor:
             match selected_table_name:
                 case 'MQTT_Server':
-                    cursor.execute(f'SELECT * FROM {selected_table_name};')
+                    cursor.execute(f'''
+                        SELECT ms.id_server as " ",
+                               ms.ulr as "Server address",
+                               ms.status
+                        FROM mqtt_server as ms "Server status"
+                    ''')
                     data = cursor.fetchall()
                 case 'Measured_Unit':
-                    cursor.execute(f'SELECT * FROM {selected_table_name};')
+                    cursor.execute(f'''
+                        SELECT mu.id_measured_unit as " ",
+                               mu.title as "Measured unit title",
+                               mu.unit as "Unit"
+                        FROM measured_unit as mu
+                    ''')
                     data = cursor.fetchall()
                 case 'Station':
                     cursor.execute(f'''
@@ -74,10 +86,10 @@ def select_table(request):
                     data = cursor.fetchall()
 
         columns = [desc[0] for desc in cursor.description]
-        return render(request, 'select_table.html', {
+        return render(request, 'account/select_table.html', {
             'data': data,
             'columns': columns,
             'tables': tables
         })
     else:
-        return render(request, 'select_table.html', {'tables': tables})
+        return render(request, 'account/select_table.html', {'tables': tables})

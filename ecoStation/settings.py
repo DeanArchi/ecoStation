@@ -32,6 +32,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'account',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -130,3 +131,9 @@ STATICFILES_DIRS = [
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_REDIRECT_URL = 'tables'
+LOGIN_URL = 'login'
+LOGOUT_URL = 'logout'
+# The EMAIL_BACKEND setting indicates the class to use to send emails
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
