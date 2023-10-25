@@ -6,82 +6,59 @@ from django.db import connection
 
 @login_required
 def select_table(request):
-    tables = ['MQTT_Server', 'Measured_Unit', 'Station',
-              'Favorite', 'Optimal_Value', 'Measurement', 'MQTT_Unit']
+    tables = ['Information about the stations', 'Station measurements', 'Air quality parameters']
     if request.method == 'POST':
         selected_table_name = request.POST.get('selected_table')
         with connection.cursor() as cursor:
             match selected_table_name:
-                case 'MQTT_Server':
+                case 'Information about the stations':
                     cursor.execute(f'''
-                        SELECT ms.id_server as " ",
-                               ms.ulr as "Server address",
-                               ms.status
-                        FROM mqtt_server as ms "Server status"
-                    ''')
-                    data = cursor.fetchall()
-                case 'Measured_Unit':
-                    cursor.execute(f'''
-                        SELECT mu.id_measured_unit as " ",
-                               mu.title as "Measured unit title",
-                               mu.unit as "Unit"
-                        FROM measured_unit as mu
-                    ''')
-                    data = cursor.fetchall()
-                case 'Station':
-                    cursor.execute(f'''
-                        SELECT st.id_station as " ",
+                        SELECT st._name as "Station address", 
                                st.city as "City", 
-                               st._name as "Station address", 
                                st.status as "Station status", 
-                               ms.url as "Server url", 
                                st.id_saveecobot as "SaveEcoBot ID", 
                                st.coordinates as "Station coordinates"
                         FROM station as st
                         LEFT JOIN mqtt_server as ms ON st.id_server = ms.id_server
                     ''')
                     data = cursor.fetchall()
-                case 'Favorite':
+                case 'Station measurements':
                     cursor.execute(f'''
-                        select fv.user_name as "User",
-                               st._name as "Station address"
-                        from favorite as fv
-                        join station as st on st.id_station = fv.id_station
-                    ''')
-                    data = cursor.fetchall()
-                case 'Optimal_Value':
-                    cursor.execute(f'''
-                        select mu.title as "Title",
-                               ct.designation as "Designation",
-                               ov.bottom_border as "Bottom Border",
-                               ov.upper_border as "Upper Border"
-                        from optimal_value as ov
-                        join category as ct on ov.id_category = ct.id_category
-                        join measured_unit as mu on ov.id_measured_unit = mu.id_measured_unit 
-                    ''')
-                    data = cursor.fetchall()
-                case 'Measurement':
-                    cursor.execute(f'''
-                        select me.id_measurment as " ",
-                               me._time as "Measurement time",
-                               me._value as "Measurement value",
-                               st._name as "Station address",
-                               mu.title as "Title"
-                        from measurment as me
-                        join station as st on st.id_station = me.id_station
-                        join measured_unit as mu on me.id_measured_unit = mu.id_measured_unit 
-                        LIMIT 100
-                    ''')
-                    data = cursor.fetchall()
-                case 'MQTT_Unit':
-                    cursor.execute(f'''
-                        select st._name as "Station address",
+                        SELECT st._name as "Station address",
+                               me._time as "Time",
                                mu.title as "Title",
-                               mq._message as "Message",
-                               mq._order as "Order"
-                        from mqtt_unit as mq
-                        join station as st on st.id_station = mq.id_station
-                        join measured_unit as mu on mq.id_measured_unit = mu.id_measured_unit 
+                               me._value as "Value",
+--                             COALESCE is used to select the "designation" value from the subquery or "Unknown" if the 
+--                             "designation" value is missing
+                               COALESCE(ct.designation, 'Unknown') as "Designation"
+                        FROM measurment as me
+                        JOIN station as st ON st.id_station = me.id_station
+                        JOIN measured_unit as mu ON me.id_measured_unit = mu.id_measured_unit
+                        LEFT JOIN (
+                            SELECT
+                                ov.id_measured_unit,
+                                ct.designation,
+                                ov.bottom_border,
+                                ov.upper_border
+                            FROM category ct
+                            JOIN optimal_value ov ON ov.id_category = ct.id_category
+                        ) AS ct ON ct.id_measured_unit = me.id_measured_unit 
+                        AND me._value >= ct.bottom_border
+                        AND (me._value < ct.upper_border OR ct.upper_border IS NULL)
+                        ORDER BY st._name
+                        LIMIT 100;
+                    ''')
+                    data = cursor.fetchall()
+                case 'Air quality parameters':
+                    cursor.execute(f'''
+                        SELECT mu.title as "Title",
+                               ct.designation as "Designation",
+                               mu.unit as "Unit",
+                               ov.bottom_border as "Bottom Border",
+                               ov.upper_border as "Upper border"
+                        FROM optimal_value as ov
+                        JOIN measured_unit as mu ON ov.id_measured_unit = mu.id_measured_unit
+                        JOIN category as ct ON ov.id_category = ct.id_category
                     ''')
                     data = cursor.fetchall()
 
