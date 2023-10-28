@@ -15,14 +15,27 @@
             <a class="h2 app-name" href="">ecoStation</a>
             {% if request.user.is_authenticated %}
                 <div class="dropdown">
-                    <button onclick="showDropdown()" class="dropdown-button btn btn-info">Show info</button>
-                    <div id="list" class="dropdown-content">
-                       <form id="table-form" method="post">
+                    <button onclick="showInfoDropdown()" class="dropdown-button btn btn-info">Show info</button>
+                    <div id="info-list" class="dropdown-content">
+                        <form id="info-form" method="post">
                             {% csrf_token %}
                             <input type="hidden" name="selected_table" id="selected_table">
                         </form>
                         {% for table in tables %}
                             <a href="#" onclick="selectTable('{{ table }}')">{{ table }}</a>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button onclick="showReportDropdown()" class="dropdown-button btn btn-info">Show reports</button>
+                    <div id="report-list" class="dropdown-content">
+                        <form id="report-form" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="selected_report" id="selected_report">
+                        </form>
+                        {% for report in reports %}
+                            <a href="#" onclick="selectReport('{{ report }}')">{{ report }}</a>
                         {% endfor %}
                     </div>
                 </div>
@@ -41,8 +54,45 @@
     </header>
 
     <div id="content">
-      {% block content %}
-      {% endblock %}
+        {% block content %}
+        {% endblock %}
     </div>
+
+    <script>
+        function showInfoDropdown() {
+            document.getElementById("info-list").classList.toggle("show");
+            document.getElementById("report-list").classList.remove("show");
+        }
+
+        function showReportDropdown() {
+            document.getElementById("report-list").classList.toggle("show");
+            document.getElementById("info-list").classList.remove("show");
+        }
+
+        function selectTable(selectedTable) {
+            document.getElementById("selected_table").value = selectedTable;
+            document.getElementById("info-form").submit();
+        }
+
+        function selectReport(selectedReport) {
+            document.getElementById("selected_report").value = selectedReport;
+            document.getElementById("report-form").submit();
+        }
+
+        // Close the dropdown menu if the user clicks outside of it
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropdown-button')) {
+
+                let dropdowns = document.getElementsByClassName("dropdown-content");
+                let i;
+                for (i = 0; i < dropdowns.length; i++) {
+                    let openDropdown = dropdowns[i];
+                    if (openDropdown.classList.contains('show')) {
+                        openDropdown.classList.remove('show');
+                    }
+                }
+            }
+        }
+    </script>
 </body>
 </html>

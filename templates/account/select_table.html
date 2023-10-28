@@ -2,46 +2,35 @@
 {% block title %}EcoStation{% endblock %}
 {% block content %}
 
-    <div class="table-container">
-        <table class="table table-bordered">
+<div class="filter-form" {% if show_filter_form %}style="display: block;" {% else %} style="display: none;" {% endif %}>
+    <form action="{% url 'data' %}" method="POST">
+        {% csrf_token %}
+        <label for="station_select">Choose station address:</label>
+        <select name="station_address" id="station_select">
+            {% for station in stations %}
+                <option value="{{ station }}">{{ station }}</option>
+            {% endfor %}
+        </select>
+        <input type="hidden" name="selected_report" value="List of connected stations">
+        <input type="submit" value="Search">
+    </form>
+</div>
+
+<div class="table-container">
+    <table class="table table-bordered">
+        <tr>
+            {% for column in columns %}
+                <th>{{ column }}</th>
+            {% endfor %}
+        </tr>
+        {% for row in data %}
             <tr>
-                {% for column in columns %}
-                    <th>{{ column }}</th>
+                {% for value in row %}
+                    <td>{{ value }}</td>
                 {% endfor %}
             </tr>
-            {% for row in data %}
-                <tr>
-                    {% for value in row %}
-                        <td>{{ value }}</td>
-                    {% endfor %}
-                </tr>
-            {% endfor %}
-        </table>
-    </div>
+        {% endfor %}
+    </table>
+</div>
 
-    <script>
-        function showDropdown() {
-            document.getElementById("list").classList.toggle("show");
-        }
-
-        function selectTable(selectedTable) {
-            document.getElementById("selected_table").value = selectedTable;
-            document.getElementById("table-form").submit();
-        }
-
-        // Close the dropdown menu if the user clicks outside of it
-        window.onclick = function(event) {
-            if (!event.target.matches('.dropdown-button')) {
-
-                let dropdowns = document.getElementsByClassName("dropdown-content");
-                let i;
-                for (i = 0; i < dropdowns.length; i++) {
-                    let openDropdown = dropdowns[i];
-                    if (openDropdown.classList.contains('show')) {
-                        openDropdown.classList.remove('show');
-                    }
-                }
-            }
-        }
-    </script>
 {% endblock %}
