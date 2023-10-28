@@ -6,16 +6,25 @@ class MQTTServer(models.Model):
     Url = models.TextField()
     Status = models.CharField(max_length=10)
 
+    class Meta:
+        app_label = 'tables'
+
 
 class Category(models.Model):
     ID_Category = models.CharField(max_length=5, primary_key=True)
     Designation = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'tables'
 
 
 class MeasuredUnit(models.Model):
     ID_Measured_Unit = models.CharField(max_length=5, primary_key=True)
     Title = models.CharField(max_length=100)
     Unit = models.CharField(max_length=100)
+
+    class Meta:
+        app_label = 'tables'
 
 
 class Station(models.Model):
@@ -25,7 +34,10 @@ class Station(models.Model):
     Status = models.CharField(max_length=10)
     ID_Server = models.ForeignKey(MQTTServer, on_delete=models.CASCADE)
     ID_SaveEcoBot = models.CharField(max_length=20)
-    Coordinates = models.PointField()
+    Coordinates = models.CharField(max_length=255)
+
+    class Meta:
+        app_label = 'tables'
 
 
 class Favorite(models.Model):
@@ -34,18 +46,18 @@ class Favorite(models.Model):
 
     class Meta:
         unique_together = ('User_Name', 'ID_Station')
+        app_label = 'tables'
 
 
 class OptimalValue(models.Model):
     ID_Category = models.ForeignKey(Category, on_delete=models.CASCADE, primary_key=True)
-    ID_Measured_Unit = models.CharField(MeasuredUnit, on_delete=models.CASCADE, primary_key=True)
+    ID_Measured_Unit = models.ForeignKey(MeasuredUnit, on_delete=models.CASCADE, primary_key=True)
     Bottom_Border = models.DecimalField(max_digits=10, decimal_places=2)
     Upper_Border = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     class Meta:
         unique_together = ('ID_Category', 'ID_Measured_Unit')
-        category = models.ForeignKey(Category, on_delete=models.CASCADE)
-        measured_unit = models.ForeignKey(MeasuredUnit, on_delete=models.CASCADE)
+        app_label = 'tables'
 
 
 class Measurment(models.Model):
@@ -54,6 +66,9 @@ class Measurment(models.Model):
     _Value = models.DecimalField(max_digits=10, decimal_places=2)
     ID_Station = models.ForeignKey(Station, on_delete=models.CASCADE)
     ID_Measured_Unit = models.ForeignKey(MeasuredUnit, on_delete=models.CASCADE)
+
+    class Meta:
+        app_label = 'tables'
 
 
 class MQTTUnit(models.Model):
@@ -64,3 +79,4 @@ class MQTTUnit(models.Model):
 
     class Meta:
         unique_together = ('ID_Station', 'ID_Measured_Unit')
+        app_label = 'tables'
