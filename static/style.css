@@ -84,3 +84,13 @@ body {
     width: 600px;
 }
 
+.filter-form {
+    margin-bottom: 8px;
+}
+
+#station_select {
+    width: 250px;
+    margin-bottom: 8px;
+    background: url('arrow-down.svg') no-repeat right 5px center;
+}
+

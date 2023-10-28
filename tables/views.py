@@ -1,6 +1,12 @@
+from urllib.parse import quote_plus, unquote_plus
+
 from django.contrib.auth.decorators import login_required
+from django.http import HttpResponse
 from django.shortcuts import render
 from django.db import connection
+from django.template.loader import get_template
+from django.utils import timezone
+from weasyprint import HTML
 
 
 @login_required
@@ -8,7 +14,11 @@ def select_data(request):
     tables = ['Information about the stations', 'Station measurements', 'Air quality parameters']
     reports = ['List of connected stations', 'Station measurement results for the time period']
     with connection.cursor() as cursor:
-        cursor.execute('SELECT DISTINCT _Name FROM Station;')
+        cursor.execute('''
+            SELECT _Name 
+            FROM Station
+            WHERE status = 'enabled'
+        ''')
         stations = [row[0] for row in cursor.fetchall()]
 
     selected_table_name = request.POST.get('selected_table')
@@ -78,7 +88,7 @@ def select_data(request):
                                    WHERE me.ID_Station = st.ID_Station
                                ) AS "Connected from",
                                (
-                                   SELECT ARRAY_AGG(DISTINCT  mu.Title)
+                                   SELECT STRING_AGG(DISTINCT mu.Title, ', ')
                                    FROM Measurment AS me
                                    JOIN Measured_Unit AS mu ON me.ID_Measured_Unit = mu.ID_Measured_Unit
                                    WHERE me.ID_Station = st.ID_Station
@@ -94,11 +104,52 @@ def select_data(request):
             'tables': tables,
             'reports': reports,
             'stations': stations,
-            'show_filter_form': show_filter_form
+            'show_filter_form': show_filter_form,
+            'station_address': quote_plus(station_address)
         })
     else:
         return render(request, 'account/select_table.html', {
             'tables': tables,
             'reports': reports,
-            'stations': stations,
         })
+
+
+@login_required
+def generate_pdf(request, station_address=''):
+    current_time = timezone.now()
+    station_address = unquote_plus(station_address)
+
+    with connection.cursor() as cursor:
+        cursor.execute('''
+                SELECT st._Name AS "Station address",
+                       (
+                           SELECT MIN(me._Time)
+                           FROM Measurment AS me
+                           WHERE me.ID_Station = st.ID_Station
+                       ) AS "Connected from",
+                       (
+                           SELECT ARRAY_AGG(DISTINCT  mu.Title)
+                           FROM Measurment AS me
+                           JOIN Measured_Unit AS mu ON me.ID_Measured_Unit = mu.ID_Measured_Unit
+                           WHERE me.ID_Station = st.ID_Station
+                       ) AS "Air parameters"
+                FROM Station AS st
+                WHERE st._Name = %s
+            ''', [station_address])
+        data = cursor.fetchall()
+
+    template = get_template('pdf/connected_stations.html')
+    context = {
+        'data': data,
+        'station_address': station_address,
+        'current_time': current_time,
+    }
+
+    html = template.render(context)
+    pdf = HTML(string=html).write_pdf()
+
+    response = HttpResponse(pdf, content_type='application/pdf')
+    formatted_date = current_time.strftime('%Y-%m-%d')
+    filename = f'report_list_of_connected_stations_{formatted_date}.pdf'
+    response['Content-Disposition'] = f'filename="{filename}"'
+    return response
