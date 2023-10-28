@@ -6,13 +6,17 @@
     <form action="{% url 'data' %}" method="POST">
         {% csrf_token %}
         <label for="station_select">Choose station address:</label>
-        <select name="station_address" id="station_select">
+        <select name="station_address" id="station_select" class="form-control form-control-sm">
+        <i class="bi bi-arrow-down"></i>
             {% for station in stations %}
                 <option value="{{ station }}">{{ station }}</option>
             {% endfor %}
         </select>
         <input type="hidden" name="selected_report" value="List of connected stations">
-        <input type="submit" value="Search">
+        <input type="submit" class="btn btn-primary btn-sm" value="Search">
+        {% if station_address %}
+            <a href="{% url 'generate_pdf' station_address=station_address %}" class="btn btn-primary btn-sm" target="_blank">Generate PDF</a>
+        {% endif %}
     </form>
 </div>
 
