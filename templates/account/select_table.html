@@ -2,20 +2,30 @@
 {% block title %}EcoStation{% endblock %}
 {% block content %}
 
-<div class="filter-form" {% if show_filter_form %}style="display: block;" {% else %} style="display: none;" {% endif %}>
+<div class="report-1" {% if report_1 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+    {% if station_address %}
+        <a href="{{ pdf_url }}" class="btn btn-primary btn-sm" target="_blank">Generate PDF</a>
+    {% endif %}
+</div>
+
+<div class="filter-form" {% if report_2 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
     <form action="{% url 'data' %}" method="POST">
         {% csrf_token %}
         <label for="station_select">Choose station address:</label>
         <select name="station_address" id="station_select" class="form-control form-control-sm">
-        <i class="bi bi-arrow-down"></i>
             {% for station in stations %}
                 <option value="{{ station }}">{{ station }}</option>
             {% endfor %}
         </select>
-        <input type="hidden" name="selected_report" value="List of connected stations">
+        <label for="start_date">Start Date:</label>
+        <input type="date" name="start_date" id="start_date">
+        <label for="end_date">End Date:</label>
+        <input type="date" name="end_date" id="end_date">
+
+        <input type="hidden" name="selected_report" value="Station measurement results for the time period">
         <input type="submit" class="btn btn-primary btn-sm" value="Search">
         {% if station_address %}
-            <a href="{% url 'generate_pdf' station_address=station_address %}" class="btn btn-primary btn-sm" target="_blank">Generate PDF</a>
+            <a href="{{ pdf_url }}" class="btn btn-primary btn-sm" target="_blank">Generate PDF</a>
         {% endif %}
     </form>
 </div>

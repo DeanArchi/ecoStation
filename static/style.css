@@ -84,8 +84,8 @@ body {
     width: 600px;
 }
 
-.filter-form {
-    margin-bottom: 8px;
+.filter-form, .report-1 {
+    margin-bottom: 8px !important;
 }
 
 #station_select {
