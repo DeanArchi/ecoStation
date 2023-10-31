@@ -12,6 +12,7 @@ from weasyprint import HTML
 
 @login_required
 def select_data(request):
+    url = ''
     tables = ['Information about the stations', 'Station measurements', 'Air quality parameters']
     reports = ['List of connected stations', 'Station measurement results for the time period']
     with connection.cursor() as cursor:
@@ -111,12 +112,6 @@ def select_data(request):
                     data = cursor.fetchall()
                 case 'Station measurement results for the time period':
                     report_2 = True
-                    url = reverse('generate_pdf', kwargs={
-                        'station_address': station_address,
-                        'start_date': start_date,
-                        'end_date': end_date,
-                        'report': 2
-                    })
                     cursor.execute(f'''
                         SELECT st._Name AS "Station address",
                                mu.Title AS "Air parameter",
@@ -131,6 +126,13 @@ def select_data(request):
                         AND me._Time <= %s
                         GROUP BY st._Name, mu.Title
                     ''', [station_address, start_date, end_date])
+                    station_address = quote_plus(station_address)
+                    url = reverse('generate_pdf', kwargs={
+                        'station_address': station_address,
+                        'start_date': start_date,
+                        'end_date': end_date,
+                        'report': 2
+                    })
                     data = cursor.fetchall()
         columns = [desc[0] for desc in cursor.description]
         return render(request, 'account/select_table.html', {
@@ -141,7 +143,7 @@ def select_data(request):
             'stations': stations,
             'report_1': report_1,
             'report_2': report_2,
-            'station_address': quote_plus(station_address),
+            'station_address': station_address,
             'start_date': start_date,
             'end_date': end_date,
             'pdf_url': url,
@@ -217,6 +219,4 @@ def generate_pdf(request, station_address='', start_date='', end_date='', report
 
     response = HttpResponse(pdf, content_type='application/pdf')
     response['Content-Disposition'] = f'filename="{filename}"'
-    print(f'====="start_date": {start_date}=====')
-    print(f'====="end_date": {end_date}=====')
     return response

@@ -132,7 +132,7 @@ STATICFILES_DIRS = [
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
-LOGIN_REDIRECT_URL = 'tables'
+LOGIN_REDIRECT_URL = 'data'
 LOGIN_URL = 'login'
 LOGOUT_URL = 'logout'
 # The EMAIL_BACKEND setting indicates the class to use to send emails
