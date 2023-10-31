@@ -42,7 +42,7 @@ body {
 }
 
 .app-name {
-    color: black;
+    color: black !important;
     margin-right: 16px;
     text-decoration: none !important;
 }
@@ -51,32 +51,15 @@ body {
     color: black;
 }
 
-.dropdown-button:hover, .dropdown-button:focus {
-    background-color: #2980B9;
-}
-
 .dropdown {
-    position: relative;
-    display: inline-block;
+    position: relative !important;
+    display: inline-block !important;
 }
 
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: #f1f1f1;
-    min-width: 160px;
-    box-shadow: 0 8px 16px 0 rgba(0,0,0,0.2);
-    z-index: 1;
+.power-bi-dropdown {
+    margin-left: 24.125rem !important;
+    margin-top: -2.5rem !important;
 }
-
-.dropdown-content a {
-    color: black;
-    padding: 12px 16px;
-    text-decoration: none;
-    display: block;
-}
-
-.dropdown-content a:hover {background-color: #ddd}
 
 .show {display:block;}
 
@@ -91,6 +74,5 @@ body {
 #station_select {
     width: 250px;
     margin-bottom: 8px;
-    background: url('arrow-down.svg') no-repeat right 5px center;
 }
 
