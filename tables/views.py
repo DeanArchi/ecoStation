@@ -44,7 +44,6 @@ def select_data(request):
                                st.id_saveecobot as "SaveEcoBot ID", 
                                st.coordinates as "Station coordinates"
                         FROM station as st
-                        LEFT JOIN mqtt_server as ms ON st.id_server = ms.id_server
                     ''')
                     data = cursor.fetchall()
                 case 'Station measurements':
