@@ -5,11 +5,12 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" type="text/css" href="{% static 'style.css' %}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@4.0.0/dist/css/bootstrap.min.css" integrity="sha384-Gn5384xqQ1aoWXA+058RXPxPg6fy4IWvTNh0E263XmFcJlSAwiGgFAW/dAiS6JXm" crossorigin="anonymous">    <title>{% block title %}{% endblock %}</title>
 </head>
 <body>
-    <header class="header">
+    <header class="header" id="header">
         <div>
             <a class="h2 app-name" href="">ecoStation</a>
             {% if request.user.is_authenticated %}
@@ -23,7 +24,7 @@
                             <input type="hidden" name="selected_table" id="selected_table">
                         </form>
                         {% for table in tables %}
-                            <a class="dropdown-item" href="#" onclick="selectTable('{{ table }}')">{{ table }}</a>
+                            <a class="dropdown-item" href="#" onclick="showTableLoader('{{ table }}')">{{ table }}</a>
                         {% endfor %}
                     </div>
                 </div>
@@ -38,7 +39,7 @@
                             <input type="hidden" name="selected_report" id="selected_report">
                         </form>
                         {% for report in reports %}
-                            <a class="dropdown-item" href="#" onclick="selectReport('{{ report }}')">{{ report }}</a>
+                            <a class="dropdown-item" href="#" onclick="showReportLoader('{{ report }}')">{{ report }}</a>
                         {% endfor %}
 
                         <div class="dropright">
@@ -48,6 +49,21 @@
                                 <a class="dropdown-item" href="https://app.powerbi.com/groups/me/reports/8fc70a32-b5c9-4b8b-a9f1-4e2c793ac184/ReportSection?experience=power-bi" target="_blank">Station measurement results for the time period</a>
                             </div>
                         </div>
+                    </div>
+                </div>
+
+                <div class="dropdown">
+                    <button onclick="showVisualDropdown()" class="btn btn-info dropdown-toggle dropdown-button" type="button" id="dropdownMenuButton" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                        Show visualization
+                    </button>
+                    <div id="visual-list" class="dropdown-menu dropdown-content">
+                        <form id="visual-form" method="post">
+                            {% csrf_token %}
+                            <input type="hidden" name="selected_visual" id="selected_visual">
+                        </form>
+                        {% for visual in visuals %}
+                            <a class="dropdown-item" href="#" onclick="showVisualLoader('{{ visual }}')">{{ visual }}</a>
+                        {% endfor %}
                     </div>
                 </div>
             {% endif %}
@@ -70,18 +86,44 @@
     </div>
 
     <script>
+        function showTableLoader(table) {
+            showLoader();
+            selectTable(table);
+        }
+        function showReportLoader(report) {
+            showLoader();
+            selectReport(report);
+        }
+        function showVisualLoader(visual) {
+            showLoader();
+            selectVisual(visual);
+        }
+        function showLoader(){
+            let loaderDiv = $('<div style="" id="loadingDiv"><div class="loader"></div>Loading, please wait...</div>');
+
+            loaderDiv.insertAfter(document.getElementById("header"));
+        }
+
         function showInfoDropdown() {
             document.getElementById("info-list").classList.toggle("show");
             document.getElementById("report-list").classList.remove("show");
+            document.getElementById("visual-list").classList.remove("show");
         }
 
         function showReportDropdown() {
             document.getElementById("report-list").classList.toggle("show");
             document.getElementById("info-list").classList.remove("show");
+            document.getElementById("visual-list").classList.remove("show");
         }
 
         function showPowerBIDropdown() {
             document.getElementById("power-bi-list").classList.toggle("show");
+        }
+
+        function showVisualDropdown() {
+            document.getElementById("visual-list").classList.toggle("show");
+            document.getElementById("info-list").classList.remove("show");
+            document.getElementById("report-list").classList.remove("show");
         }
 
         function selectTable(selectedTable) {
@@ -92,6 +134,11 @@
         function selectReport(selectedReport) {
             document.getElementById("selected_report").value = selectedReport;
             document.getElementById("report-form").submit();
+        }
+
+        function selectVisual(selectedVisual) {
+            document.getElementById("selected_visual").value = selectedVisual;
+            document.getElementById("visual-form").submit();
         }
 
         // Close the dropdown menu if the user clicks outside of it

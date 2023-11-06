@@ -2,13 +2,13 @@
 {% block title %}EcoStation{% endblock %}
 {% block content %}
 
-<div class="report-1" {% if report_1 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+<div class="report-1" {% if report == 1%} style="display: block;" {% else %} style="display: none;" {% endif %}>
     {% if station_address %}
         <a href="{{ pdf_url }}" class="btn btn-primary btn-sm" target="_blank">Generate PDF</a>
     {% endif %}
 </div>
 
-<div class="filter-form" {% if report_2 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+<div class="filter-form" {% if report == 2 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
     <form action="{% url 'data' %}" method="POST">
         {% csrf_token %}
         <label for="station_select">Choose station address:</label>
@@ -30,21 +30,239 @@
     </form>
 </div>
 
-<div class="table-container">
-    <table class="table table-bordered">
-        <tr>
-            {% for column in columns %}
-                <th>{{ column }}</th>
+<div class="visual-1" {% if visual == 1 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+    <form action="{% url 'data' %}" method="POST">
+        {% csrf_token %}
+        <label for="start_date">Start Date:</label>
+        <input type="date" name="start_date" id="start_date">
+        <label for="end_date">End Date:</label>
+        <input type="date" name="end_date" id="end_date">
+
+        <input type="hidden" name="selected_visual" value="PM2.5, PM10 by regions">
+        <input type="submit" class="btn btn-primary btn-sm" value="Search">
+    </form>
+</div>
+
+<div class="visual-2" {% if visual == 2 %} style="display: block;" {% else %} style="display: none;" {% endif %}>
+    <form action="{% url 'data' %}" method="POST">
+        {% csrf_token %}
+        <label for="station_select">Choose station address:</label>
+        <select name="station_address" id="station_select" class="form-control form-control-sm">
+            {% for station in stations %}
+                <option value="{{ station }}">{{ station }}</option>
             {% endfor %}
-        </tr>
-        {% for row in data %}
+        </select>
+        <input type="hidden" name="selected_visual" value="Average daily values of PM2.5">
+        <input type="submit" class="btn btn-primary btn-sm" value="Search">
+    </form>
+</div>
+
+<div class="visual-3" {% if visual == 3 or visual == 4%} style="display: block;" {% else %} style="display: none;" {% endif %}>
+    <form action="{% url 'data' %}" method="POST">
+        {% csrf_token %}
+        <label for="station_select">Choose station address:</label>
+        <select name="station_address" id="station_select" class="form-control form-control-sm">
+            {% for station in stations %}
+                <option value="{{ station }}">{{ station }}</option>
+            {% endfor %}
+        </select>
+        {% if visual == 3 %}
+            <input type="hidden" name="selected_visual" value="Number of measurements of optimal sulfur dioxide values">
+        {% endif %}
+        {% if visual == 4 %}
+            <input type="hidden" name="selected_visual" value="Number of measurements of optimal carbon monoxide values">
+        {% endif %}
+        <input type="submit" class="btn btn-primary btn-sm" value="Search">
+    </form>
+</div>
+
+<div class="measurement-content">
+    <div class="table-container">
+        <div {% if visual == 1 %} style="display: block;" {% else %} style="display: none;"{% endif %}>
+            The maximum values recorded for particulate matter PM2.5 and PM10
+            at each station in the period from <strong>{{ start_date }}</strong> to <strong>{{ end_date }}</strong>
+        </div>
+        <div {% if visual == 2 %} style="display: block;" {% else %} style="display: none;"{% endif %}>
+            The number of average daily values of PM2.5 particulate matter that fall within the harmful level <br>
+            <strong>Station address:</strong> {{ station_address }}
+        </div>
+        <div {% if visual == 3 %} style="display: block;" {% else %} style="display: none;"{% endif %}>
+            Categories of optimal values and the number of measurements of average daily PM10 values corresponding to the categories <br>
+            <strong>Station address:</strong> {{ station_address }}
+        </div>
+        <div {% if visual == 4 %} style="display: block;" {% else %} style="display: none;"{% endif %}>
+            Categories of optimal values and the number of measurements of average daily PM2.5 values corresponding to the categories <br>
+            <strong>Station address:</strong> {{ station_address }}
+        </div>
+        <table class="table table-bordered">
             <tr>
-                {% for value in row %}
-                    <td>{{ value }}</td>
+                {% for column in columns %}
+                    <th>{{ column }}</th>
                 {% endfor %}
             </tr>
-        {% endfor %}
-    </table>
+            {% for row in data %}
+                <tr>
+                    {% for value in row %}
+                        <td>{{ value }}</td>
+                    {% endfor %}
+                </tr>
+            {% endfor %}
+        </table>
+    </div>
+
+    <div class="graphic-1" {% if visual == 1 %} style="display: inline-block;" {% else %} style="display: none;"{% endif %}>
+        <canvas id="Chart1" width="800" height="800"></canvas>
+
+        <script>
+            let data1 = {{ data|safe }}
+
+            const columns1 = [];
+            const columns2 = [];
+            let address = [];
+
+            data1.forEach((item, index) => {
+                if (item[1] === 'PM10') {
+                    columns1.push(item[0]);
+                } else if (item[1] === 'PM2.5') {
+                    columns2.push(item[0]);
+                }
+
+                if (index % 2 === 0) {
+                    address.push(item[2]);
+                }
+            });
+
+            let ctx1 = document.getElementById('Chart1').getContext('2d');
+            let Chart1 = new Chart(ctx1, {
+                type: 'bar',
+                data: {
+                    labels: address,
+                    datasets: [{
+                        label: 'PM10',
+                        data: columns1,
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 1
+                    }, {
+                        label: 'PM2.5',
+                        data: columns2,
+                        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        borderWidth: 1
+                    }]
+                }
+            });
+        </script>
+    </div>
+
+    <div class="graphic" {% if visual == 2 %} style="display: inline-block;" {% else %} style="display: none;"{% endif %}>
+        <canvas id="Chart2" width="400" height="400"></canvas>
+
+        <script>
+            let data2 = {{ data|safe }};
+
+            let veryPoorData = data2[0][0];
+            let severeData = data2[0][1];
+            let ctx2 = document.getElementById('Chart2').getContext('2d');
+            let Chart2 = new Chart(ctx2, {
+                type: 'bar',
+                data: {
+                    labels: ['Very poor', 'Severe'],
+                    datasets: [{
+                        label: 'PM2.5',
+                        data: [veryPoorData, severeData],
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+            });
+        </script>
+    </div>
+
+    <div class="graphic" {% if visual == 3 %} style="display: inline-block;" {% else %} style="display: none;"{% endif %}>
+        <canvas id="Chart3" width="400" height="400"></canvas>
+
+        <script>
+            let data3 = {{ data|safe }};
+
+
+            const categories2 = ['Excellent', 'Fine', 'Moderate', 'Poor', 'Very Poor'];
+            const values2 = data3.map(item => item[1]);
+
+            let ctx3 = document.getElementById('Chart3').getContext('2d');
+            let Chart3 = new Chart(ctx3, {
+                type: 'bar',
+                data: {
+                    labels: categories2,
+                    datasets: [{
+                        label: 'PM10',
+                        data: values2,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+            });
+        </script>
+    </div>
+
+    <div class="graphic" {% if visual == 4 %} style="display: inline-block;" {% else %} style="display: none;"{% endif %}>
+        <canvas id="Chart4" width="400" height="400"></canvas>
+
+        <script>
+            let data4 = {{ data|safe }};
+
+
+            const categories3 = ['Excellent', 'Fine', 'Moderate', 'Poor', 'Very Poor'];
+            const values3 = data4.map(item => item[1]);
+
+            let ctx4 = document.getElementById('Chart4').getContext('2d');
+            let Chart4 = new Chart(ctx4, {
+                type: 'bar',
+                data: {
+                    labels: categories3,
+                    datasets: [{
+                        label: 'PM2.5',
+                        data: values3,
+                        backgroundColor: [
+                            'rgba(255, 99, 132, 0.2)',
+                            'rgba(54, 162, 235, 0.2)',
+                            'rgba(255, 206, 86, 0.2)',
+                            'rgba(75, 192, 192, 0.2)',
+                            'rgba(153, 102, 255, 0.2)'
+                        ],
+                        borderColor: [
+                            'rgba(255, 99, 132, 1)',
+                            'rgba(54, 162, 235, 1)',
+                            'rgba(255, 206, 86, 1)',
+                            'rgba(75, 192, 192, 1)',
+                            'rgba(153, 102, 255, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+            });
+        </script>
+    </div>
 </div>
 
 {% endblock %}
