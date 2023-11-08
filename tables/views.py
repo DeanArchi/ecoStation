@@ -160,7 +160,8 @@ def select_data(request):
                 case 'Average daily values of PM2.5':
                     visual = 2
                     cursor.execute(f'''
-                        SELECT SUM(CASE WHEN max_me.max_value > 55 AND max_me.max_value <= 110 THEN 1 ELSE 0 END) AS "Very poor",
+                        SELECT SUM(CASE WHEN max_me.max_value > 30 AND max_me.max_value <= 55 THEN 1 ELSE 0 END) AS "Very poor",
+                               SUM(CASE WHEN max_me.max_value > 55 AND max_me.max_value <= 110 THEN 1 ELSE 0 END) AS "Very poor",
                                SUM(CASE WHEN max_me.max_value > 110 THEN 1 ELSE 0 END) AS "Severe"
                         FROM
                             Station st
@@ -191,12 +192,12 @@ def select_data(request):
                         FROM measurment AS me
                         JOIN station AS st ON st.id_station = me.id_station
                         JOIN  measured_unit AS mu ON me.id_measured_unit = mu.id_measured_unit
-                        JOIN optimal_value AS ov ON mu.id_measured_unit = ov.id_measured_unit
-                        JOIN category AS ct ON ct.id_category = ov.id_category
+                        LEFT JOIN optimal_value AS ov ON mu.id_measured_unit = ov.id_measured_unit
+                        LEFT JOIN category AS ct ON ct.id_category = ov.id_category
                         WHERE st._Name = %s
                         AND me.id_measured_unit = '2'
                         AND me._value >= ov.bottom_border
-                        AND me._value < ov.upper_border
+                        AND (ov.upper_border IS NULL OR me._value < (ov.upper_border - 1))
                         GROUP BY mu.title, ct.designation, st._name
                     ''', [station_address])
                     data = [list(row) for row in cursor.fetchall()]
@@ -209,13 +210,13 @@ def select_data(request):
                                st._name AS "Station address"
                         FROM measurment AS me
                         JOIN station AS st ON st.id_station = me.id_station
-                        JOIN  measured_unit AS mu ON me.id_measured_unit = mu.id_measured_unit
-                        JOIN optimal_value AS ov ON mu.id_measured_unit = ov.id_measured_unit
-                        JOIN category AS ct ON ct.id_category = ov.id_category
+                        JOIN measured_unit AS mu ON me.id_measured_unit = mu.id_measured_unit
+                        LEFT JOIN optimal_value AS ov ON mu.id_measured_unit = ov.id_measured_unit
+                        LEFT JOIN category AS ct ON ct.id_category = ov.id_category
                         WHERE st._Name = %s
                         AND me.id_measured_unit = '3'
                         AND me._value >= ov.bottom_border
-                        AND me._value < ov.upper_border
+                        AND (ov.upper_border IS NULL OR me._value < (ov.upper_border - 1))
                         GROUP BY mu.title, ct.designation, st._name
                     ''', [station_address])
                     data = [list(row) for row in cursor.fetchall()]
